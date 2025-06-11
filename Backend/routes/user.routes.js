@@ -1,0 +1,25 @@
+const express = require("express");
+const router = express.Router();
+const userController = require("../controllers/user.controller");
+const { verifyToken } = require("../middlewares/auth.middleware");
+
+router.get("/profile", verifyToken, userController.getMyProfile);
+router.put("/profile", verifyToken, userController.updateMyProfile);
+router.delete("/profile", verifyToken, userController.deleteMyAccount);
+
+router.get("/accounts", verifyToken, userController.getMyAccounts);
+router.post("/accounts", verifyToken, userController.createMyAccount);
+router.put("/accounts/:id", verifyToken, userController.updateMyAccount);
+router.delete("/accounts/:id", verifyToken, userController.deleteMyAccountById);
+
+router.get("/categories", verifyToken, userController.getMyCategories);
+router.post("/categories", verifyToken, userController.createMyCategory);
+router.put("/categories/:id", verifyToken, userController.updateMyCategory);
+router.delete("/categories/:id", verifyToken, userController.deleteMyCategoryById);
+
+router.get("/transactions", verifyToken, userController.getMyTransactions);
+router.post("/transactions", verifyToken, userController.createMyTransaction);
+router.put("/transactions/:id", verifyToken, userController.updateMyTransaction);
+router.delete("/transactions/:id", verifyToken, userController.deleteMyTransactionById);
+
+module.exports = router;
