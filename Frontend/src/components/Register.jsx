@@ -1,102 +1,94 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import axios from "../api/api";
 import { useNavigate } from "react-router-dom";
-import api from "../api/api";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 
-function Register() {
+const Register = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
+
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
+    role: "user",
   });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match");
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
       return;
     }
 
     try {
-      await api.post("/auth/register", {
-        name: form.name,
-        email: form.email,
-        password: form.password,
-      });
-
-      toast.success("Account created successfully!");
+      const { name, email, password, role } = formData;
+      await axios.post("/auth/register", { name, email, password, role });
+      toast.success("Inscription réussie !");
       setTimeout(() => navigate("/login"), 2000);
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || "Registration failed");
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Erreur lors de l'inscription");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <div className="w-full max-w-md p-8 space-y-4 bg-white shadow-lg rounded-xl">
-        <h2 className="text-2xl font-bold text-center">Create an Account</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded shadow-md w-full max-w-md"
+      >
+        <h2 className="text-2xl font-bold mb-4 text-center">Inscription</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Your Name"
-            className="input input-bordered w-full"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            className="input input-bordered w-full"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="input input-bordered w-full"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            className="input input-bordered w-full"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            required
-          />
+        <input
+          type="text"
+          name="name"
+          placeholder="Nom complet"
+          className="w-full mb-3 px-4 py-2 border rounded"
+          onChange={handleChange}
+          required
+        />
 
-          <button className="btn btn-primary w-full" type="submit">
-            Register
-          </button>
-        </form>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          className="w-full mb-3 px-4 py-2 border rounded"
+          onChange={handleChange}
+          required
+        />
 
-        <p className="text-center text-sm">
-          Already have an account?{" "}
-          <a className="text-primary" href="/login">
-            Login
-          </a>
-        </p>
-      </div>
+        <input
+          type="password"
+          name="password"
+          placeholder="Mot de passe"
+          className="w-full mb-3 px-4 py-2 border rounded"
+          onChange={handleChange}
+          required
+        />
 
-      <ToastContainer />
+        <input
+          type="password"
+          name="confirmPassword"
+          placeholder="Confirmer le mot de passe"
+          className="w-full mb-4 px-4 py-2 border rounded"
+          onChange={handleChange}
+          required
+        />
+
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 w-full rounded"
+        >
+          S'inscrire
+        </button>
+      </form>
     </div>
   );
-}
+};
 
 export default Register;

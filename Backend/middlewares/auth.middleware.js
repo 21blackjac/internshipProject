@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const { verifySessionToken } = require('@clerk/clerk-sdk-node');
 
-exports.verifyToken = (req, res, next) => {
+exports.verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -8,6 +9,13 @@ exports.verifyToken = (req, res, next) => {
   }
 
   const token = authHeader.split(" ")[1];
+  const session = await verifySessionToken(token);
+  
+  if (!session || !session.userId) {
+    return res.status(401).json({ error: "Session invalide ou expirée" });
+  }
+
+  req.user = session.userId;
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
