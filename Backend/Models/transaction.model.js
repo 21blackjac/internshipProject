@@ -52,6 +52,35 @@ const Transaction = {
     const sql = "DELETE FROM transactions WHERE id = ?";
     db.query(sql, [id], callback);
   },
+  count: (callback) => {
+    const sql = "SELECT COUNT(*) AS count FROM transactions";
+    db.query(sql, (err, results) => {
+      if (err) return callback(err);
+      callback(null, results[0].count);
+    });
+  },
+  getMonthlyExpenses: (userId, callback) => {
+    const sql = `
+      SELECT DATE_FORMAT(date, '%Y-%m') AS month, SUM(amount) AS total
+      FROM transactions
+      WHERE user_id = ? AND type = 'expense'
+      GROUP BY month
+      ORDER BY month DESC
+      LIMIT 12
+    `;
+    db.query(sql, [userId], callback);
+  },
+  getExpensesByCategory: (userId, callback) => {
+    const sql = `
+    SELECT categories.name AS category, SUM(transactions.amount) AS total
+    FROM transactions
+    JOIN categories ON transactions.category_id = categories.id
+    WHERE transactions.user_id = ? AND transactions.type = 'expense'
+    GROUP BY category
+    ORDER BY total DESC
+  `;
+    db.query(sql, [userId], callback);
+  },
 };
 
 module.exports = Transaction;

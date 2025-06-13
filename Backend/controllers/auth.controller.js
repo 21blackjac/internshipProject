@@ -7,7 +7,7 @@ exports.register = (req, res) => {
   if (!name || !email || !password)
     return res.status(400).json({ error: "Tous les champs sont requis." });
 
-  User.findByEmail(email, async (err, users) => {
+  User.getByEmail(email, async (err, users) => {
     if (err) return res.status(500).json({ error: err.message });
     if (users.length)
       return res.status(400).json({ error: "Email déjà utilisé." });
@@ -25,7 +25,7 @@ exports.login = (req, res) => {
   if (!email || !password)
     return res.status(400).json({ error: "Email et mot de passe requis." });
 
-  User.findByEmail(email, async (err, users) => {
+  User.getByEmail(email, async (err, users) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!users.length)
       return res.status(404).json({ error: "Utilisateur introuvable." });

@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/user.model");
-const Account = require("../Models/account.model");
+const Account = require("../models/account.model");
 const Category = require("../Models/category.model");
-const Transaction = require("../Models/transaction.model");
+const Transaction = require("../models/transaction.model");
 
 exports.getMyProfile = (req, res) => {
   const userId = req.user.id;

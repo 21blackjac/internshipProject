@@ -53,6 +53,13 @@ const User = {
     const sql = "DELETE FROM users WHERE id = ?";
     db.query(sql, [id], callback);
   },
+  count: (callback) => {
+    const sql = "SELECT COUNT(*) AS count FROM users";
+    db.query(sql, (err, results) => {
+      if (err) return callback(err);
+      callback(null, results[0].count);
+    });
+  },
 };
 
 module.exports = User;

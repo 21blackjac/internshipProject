@@ -34,6 +34,13 @@ const Account = {
     const sql = "DELETE FROM accounts WHERE id = ? AND user_id = ?";
     db.query(sql, [id, user_id], callback);
   },
+  totalBalance: (callback) => {
+    const sql = "SELECT SUM(balance) AS total FROM accounts";
+    db.query(sql, (err, results) => {
+      if (err) return callback(err);
+      callback(null, results[0].total || 0);
+    });
+  },
 };
 
 module.exports = Account;

@@ -9,6 +9,7 @@ const categoryRoutes = require("./routes/category.routes");
 const accountRoutes = require("./routes/account.routes");
 const authRoutes = require("./routes/auth.routes");
 const adminRoutes = require("./routes/admin.routes");
+const insightRoutes = require("./routes/insight.routes");
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,7 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/accounts", accountRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/user", insightRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

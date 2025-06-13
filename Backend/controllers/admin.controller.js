@@ -1,16 +1,7 @@
 const User = require("../models/user.model");
 const Transaction = require("../models/transaction.model");
-const Category = require("../models/category.model");
+const Category = require("../Models/category.model");
 const Account = require("../models/account.model");
-
-const checkUserExists = (userId, callback) => {
-  User.getById(userId, (err, user) => {
-    if (err) return callback(err);
-    if (!user || user.length === 0)
-      return callback(new Error("User not found"));
-    callback(null, true);
-  });
-};
 
 exports.getDashboardData = (req, res) => {
   let dashboard = {};
