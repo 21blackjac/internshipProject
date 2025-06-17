@@ -18,9 +18,24 @@ const Account = {
     db.query(sql, [user_id], callback);
   },
 
-  getById: (id, user_id, callback) => {
-    const sql = "SELECT * FROM accounts WHERE id = ? AND user_id = ?";
-    db.query(sql, [id, user_id], callback);
+  getByUserId: (user_id, callback) => {
+    const sql = "SELECT * FROM accounts WHERE user_id = ?";
+    db.query(sql, [user_id], callback);
+  },
+
+  getById: (id, callback) => {
+    const sql = "SELECT * FROM accounts WHERE id = ?";
+    db.query(sql, [id], callback);
+  },
+
+  getAll: (callback) => {
+    const sql = "SELECT * FROM accounts";
+    db.query(sql, callback);
+  },
+
+  getByUserIdAndType: (user_id, type, callback) => {
+    const sql = "SELECT * FROM accounts WHERE user_id = ? AND type = ?";
+    db.query(sql, [user_id, type], callback);
   },
 
   update: (id, account, user_id, callback) => {

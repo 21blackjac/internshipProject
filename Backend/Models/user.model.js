@@ -13,6 +13,19 @@ const User = {
     db.query(sql, params, callback);
   },
 
+  createFromClerk: (userData, callback) => {
+    const sql =
+      "INSERT INTO users (name, email, password, role, clerk_id) VALUES (?, ?, ?, ?, ?)";
+    const params = [
+      userData.name,
+      userData.email,
+      userData.password,
+      userData.role || "user",
+      userData.clerk_id,
+    ];
+    db.query(sql, params, callback);
+  },
+
   getByEmail: (email, callback) => {
     const sql = "SELECT * FROM users WHERE email = ?";
     db.query(sql, [email], callback);
@@ -21,6 +34,11 @@ const User = {
   getById: (id, callback) => {
     const sql = "SELECT * FROM users WHERE id = ?";
     db.query(sql, [id], callback);
+  },
+
+  getByClerkId: (clerkId, callback) => {
+    const sql = "SELECT * FROM users WHERE clerk_id = ?";
+    db.query(sql, [clerkId], callback);
   },
 
   update: (id, updateFields, callback) => {

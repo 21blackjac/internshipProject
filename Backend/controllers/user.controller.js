@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
-const User = require("../models/user.model");
-const Account = require("../models/account.model");
+const User = require("../Models/user.model");
+const Account = require("../Models/account.model");
 const Category = require("../Models/category.model");
-const Transaction = require("../models/transaction.model");
+const Transaction = require("../Models/transaction.model");
 
 exports.getMyProfile = (req, res) => {
   const userId = req.user.id;
@@ -39,21 +39,40 @@ exports.updateMyProfile = (req, res) => {
   }
 };
 
-exports.deleteMyAccount = (req, res) => {
+exports.deleteMyProfile = (req, res) => {
   const userId = req.user.id;
-  User.remove(userId, (err) => {
+  User.delete(userId, (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Compte supprimé avec succès" });
   });
 };
 
+exports.getMyAccountsList = (req, res) => {
+  const userId = req.user.id;
+  Account.getAllByUser(userId, (err, accounts) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!accounts.length)
+      return res.status(404).json({ error: "Aucun compte trouvé" });
+    res.json(accounts);
+  });
+};
+
 exports.getMyAccounts = (req, res) => {
-  Account.getByUserId(req.user.id, (err, accounts) => {
+  Account.getById(req.params.id, (err, accounts) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(accounts);
   });
 };
 
+exports.getMyAccountsByType = (req, res) => {
+  const userId = req.user.id;
+  Account.getByUserIdAndType(userId, req.params.type, (err, accounts) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!accounts.length)
+      return res.status(404).json({ error: "Aucun compte trouvé" });
+    res.json(accounts);
+  });
+};
 exports.createMyAccount = (req, res) => {
   const { name, type, balance } = req.body;
   Account.create(
@@ -86,9 +105,20 @@ exports.deleteMyAccountById = (req, res) => {
 };
 
 exports.getMyCategories = (req, res) => {
-  Category.getUserCategories(req.user.id, (err, categories) => {
+  Category.getUserDefinedCategories(req.user.id, (err, categories) => {
     if (err) return res.status(500).json({ error: err.message });
+    if (!categories.length)
+      return res.status(404).json({ error: "Aucune catégorie trouvée" });
     res.json(categories);
+  });
+};
+
+exports.getMyCategoryById = (req, res) => {
+  Category.getByUserId(req.params.id, req.user.id, (err, categories) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!categories.length)
+      return res.status(404).json({ error: "Catégorie non trouvée" });
+    res.json(categories[0]);
   });
 };
 
@@ -127,9 +157,31 @@ exports.deleteMyCategoryById = (req, res) => {
 };
 
 exports.getMyTransactions = (req, res) => {
-  Transaction.getByUserId(req.user.id, (err, transactions) => {
+  Transaction.getAllByUser(req.user.id, (err, transactions) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(transactions);
+  });
+};
+
+exports.getMyTransactionByType = (req, res) => {
+  Transaction.getByUserIdAndType(
+    req.user.id,
+    req.params.type,
+    (err, transactions) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!transactions.length)
+        return res.status(404).json({ error: "Aucune transaction trouvée" });
+      res.json(transactions);
+    }
+  );
+};
+
+exports.getMyTransactionById = (req, res) => {
+  Transaction.getByUserId(req.params.id, req.user.id, (err, transactions) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!transactions.length)
+      return res.status(404).json({ error: "Transaction non trouvée" });
+    res.json(transactions[0]);
   });
 };
 

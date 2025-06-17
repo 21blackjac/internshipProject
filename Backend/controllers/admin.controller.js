@@ -1,7 +1,7 @@
-const User = require("../models/user.model");
-const Transaction = require("../models/transaction.model");
+const User = require("../Models/user.model");
+const Transaction = require("../Models/transaction.model");
 const Category = require("../Models/category.model");
-const Account = require("../models/account.model");
+const Account = require("../Models/account.model");
 
 exports.getDashboardData = (req, res) => {
   let dashboard = {};
@@ -87,6 +87,25 @@ exports.getAccountById = (req, res) => {
   });
 };
 
+exports.getAccountsByUserId = (req, res) => {
+  const userId = req.params.userId;
+  Account.getByUserId(userId, (err, accounts) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(accounts);
+  });
+};
+
+exports.createAccount = (req, res) => {
+  const { name, balance, type } = req.body;
+  Account.create(
+    { user_id: req.user.id, name, balance, type },
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.status(201).json({ message: "Account created", id: result.insertId });
+    }
+  );
+};
+
 exports.updateAccount = (req, res) => {
   const { name, balance, type } = req.body;
   Account.update(req.params.id, { name, balance, type }, (err) => {
@@ -117,6 +136,35 @@ exports.getTransactionById = (req, res) => {
       return res.status(404).json({ error: "Transaction not found" });
     res.json(result[0]);
   });
+};
+
+exports.getTransactionsByUserId = (req, res) => {
+  const userId = req.params.userId;
+  Transaction.getByUserId(userId, (err, transactions) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(transactions);
+  });
+};
+
+exports.createTransaction = (req, res) => {
+  const { account_id, category_id, type, amount, date, description } = req.body;
+  Transaction.create(
+    {
+      user_id: req.user.id,
+      account_id,
+      category_id,
+      type,
+      amount,
+      date,
+      description,
+    },
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res
+        .status(201)
+        .json({ message: "Transaction created", id: result.insertId });
+    }
+  );
 };
 
 exports.updateTransaction = (req, res) => {
@@ -157,10 +205,31 @@ exports.getAllCategories = (req, res) => {
 exports.getCategoryById = (req, res) => {
   Category.getById(req.params.id, (err, category) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (!category.length)
+    if (category.length == 0)
       return res.status(404).json({ error: "Category not found" });
     res.json(category[0]);
   });
+};
+
+exports.getCategoriesByUserId = (req, res) => {
+  const userId = req.params.userId;
+  Category.getUserCategories(userId, (err, categories) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(categories);
+  });
+};
+
+exports.createCategory = (req, res) => {
+  const { name, user_defined } = req.body;
+  Category.create(
+    { name, user_id: req.user.id, user_defined },
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res
+        .status(201)
+        .json({ message: "Category created", id: result.insertId });
+    }
+  );
 };
 
 exports.updateCategory = (req, res) => {

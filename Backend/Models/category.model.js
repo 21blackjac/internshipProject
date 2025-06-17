@@ -16,11 +16,24 @@ const Category = {
   },
 
   getById: (id, callback) => {
-    db.query(
-      "SELECT * FROM categories WHERE user_id = ? OR user_defined = false",
-      [userId],
-      callback
-    );
+    const sql = "SELECT * FROM categories WHERE id = ?";
+    db.query(sql, [id], callback);
+  },
+
+  getByUserId: (id, userId, callback) => {
+    const sql = "SELECT * FROM categories WHERE id = ? AND user_id = ?";
+    db.query(sql, [id, userId], callback);
+  },
+
+
+  getUserCategories: (userId, callback) => {
+    const sql = "SELECT * FROM categories WHERE user_id = ?";
+    db.query(sql, [userId], callback);
+  },
+
+  getUserDefinedCategories: (userId, callback) => {
+    const sql = "SELECT * FROM categories WHERE user_id = ? AND user_defined = 1";
+    db.query(sql, [userId], callback);
   },
 
   update: (id, category, callback) => {

@@ -21,18 +21,34 @@ const Transaction = {
   },
 
   getAllByUser: (user_id, callback) => {
-    const sql = `SELECT t.*, c.name as category_name, a.name as account_name
+    const sql = `SELECT * FROM transactions
+                 WHERE user_id = ?`;
+    db.query(sql, [user_id], callback);
+  },
+
+  getAll: (callback) => {
+    const sql = `SELECT t.*, c.name as category_name, a.name as account_name, u.name as user_name
                  FROM transactions t
                  JOIN categories c ON t.category_id = c.id
                  JOIN accounts a ON t.account_id = a.id
-                 WHERE t.user_id = ?
+                 JOIN users u ON t.user_id = u.id
                  ORDER BY t.date DESC`;
-    db.query(sql, [user_id], callback);
+    db.query(sql, callback);
   },
 
   getById: (id, callback) => {
     const sql = "SELECT * FROM transactions WHERE id = ?";
     db.query(sql, [id], callback);
+  },
+
+  getByUserId: (id, userId, callback) => {
+    const sql = "SELECT * FROM transactions WHERE id = ? AND user_id = ?";
+    db.query(sql, [id, userId], callback);
+  },
+  
+  getByUserIdAndType: (userId, type, callback) => {
+    const sql = "SELECT * FROM transactions WHERE user_id = ? AND type = ?";
+    db.query(sql, [userId, type], callback);
   },
 
   update: (id, transaction, callback) => {

@@ -1,6 +1,8 @@
-const User = require("../models/user.model");
+const User = require("../Models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 
 exports.register = (req, res) => {
   const { name, email, password } = req.body;
@@ -51,6 +53,91 @@ exports.login = (req, res) => {
         role: user.role,
       },
     });
+  });
+};
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+exports.forgotPassword = (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email requis." });
+
+  User.getByEmail(email, (err, users) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!users.length)
+      return res.status(404).json({ error: "Utilisateur introuvable." });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiration = new Date(Date.now() + 3600000); // 1h
+
+    User.update(
+      users[0].id,
+      { reset_token: token, reset_token_expiration: expiration },
+      (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        const resetLink = `${process.env.FRONT_URL}/reset-password/${token}`;
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: "Réinitialisation de mot de passe",
+          html: `<p>Bonjour,</p><p>Cliquez sur ce lien pour réinitialiser votre mot de passe :</p><a href="${resetLink}">${resetLink}</a>`,
+        };
+
+        transporter.sendMail(mailOptions, (err, info) => {
+          if (err)
+            return res
+              .status(500)
+              .json({ error: "Erreur lors de l'envoi de l'email." });
+          res.json({ message: "Lien de réinitialisation envoyé par email." });
+        });
+      }
+    );
+  });
+};
+
+exports.resetPassword = (req, res) => {
+  const { token } = req.params;
+  const { password, confirmPassword } = req.body;
+
+  if (!password || password.length < 6)
+    return res.status(400).json({ error: "Mot de passe invalide." });
+  if (password !== confirmPassword)
+    return res
+      .status(400)
+      .json({ error: "Les mots de passe ne correspondent pas." });
+
+  const now = new Date();
+  const sql =
+    "SELECT * FROM users WHERE reset_token = ? AND reset_token_expiration > ?";
+  const params = [token, now];
+
+  User.query(sql, params, async (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!results.length)
+      return res.status(400).json({ error: "Token invalide ou expiré." });
+
+    const user = results[0];
+    const hashed = await bcrypt.hash(password, 10);
+
+    User.update(
+      user.id,
+      {
+        password: hashed,
+        reset_token: null,
+        reset_token_expiration: null,
+      },
+      (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Mot de passe mis à jour avec succès." });
+      }
+    );
   });
 };
 
