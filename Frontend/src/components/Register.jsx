@@ -1,18 +1,61 @@
-import React, { useState } from "react";
-import axios from "../api/api";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../api/api";
 import { toast } from "react-toastify";
+import { useSignUp } from "@clerk/clerk-react";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { signUp } = useSignUp();
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "user",
   });
+
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (
+      formData.password &&
+      formData.confirmPassword &&
+      formData.password !== formData.confirmPassword
+    ) {
+      setErrors((prev) => ({
+        ...prev,
+        confirmPassword: "Les mots de passe ne correspondent pas",
+      }));
+    } else {
+      setErrors((prev) => ({ ...prev, confirmPassword: null }));
+    }
+  }, [formData.password, formData.confirmPassword]);
+
+  const handleGoogleSignUp = async () => {
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/dashboard",
+      });
+    } catch (err) {
+      console.error("❌ Google signup failed:", err);
+      toast.error("Échec avec Google");
+    }
+  };
+
+  const handleFacebookSignUp = async () => {
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_facebook",
+        redirectUrl: "/dashboard",
+      });
+    } catch (err) {
+      console.error("❌ Facebook sign-up failed:", err);
+      toast.error("Échec avec Facebook");
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,72 +64,146 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Les mots de passe ne correspondent pas");
-      return;
-    }
+    if (errors.confirmPassword) return;
 
+    setLoading(true);
     try {
-      const { name, email, password, role } = formData;
-      await axios.post("/auth/register", { name, email, password, role });
+      const response = await api.post("/auth/register", formData);
+      console.log("✅ Register response:", response.data);
+
       toast.success("Inscription réussie !");
-      setTimeout(() => navigate("/login"), 2000);
-    } catch (err) {
-      toast.error(err.response?.data?.error || "Erreur lors de l'inscription");
+      navigate("/login");
+    } catch (error) {
+      console.error("❌ Register error:", error);
+      const errMsg = error.response?.data?.error || "Une erreur est survenue.";
+      toast.error(errMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded shadow-md w-full max-w-md"
-      >
-        <h2 className="text-2xl font-bold mb-4 text-center">Inscription</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+      <div className="w-full max-w-md p-8 space-y-6 rounded-xl shadow-lg border-gray-100">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-800">
+            Créez votre compte
+          </h2>
+          <p className="text-gray-500 mt-2">
+            Rejoignez notre communauté dès aujourd'hui
+          </p>
+        </div>
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Nom complet"
-          className="w-full mb-3 px-4 py-2 border rounded"
-          onChange={handleChange}
-          required
-        />
+        <div className="flex items-center justify-center space-x-2 mb-4">
+          <form onSubmit={handleSubmit} className="">
+              <label className="block text-sm font-medium text-gray-700">
+                Nom complet
+              </label>
+              <input
+                type="text"
+                name="name"
+                className="w-full input input-bordered focus:input-primary mb-[15px]"
+                placeholder="Ex: Mustapha Chaiq"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          className="w-full mb-3 px-4 py-2 border rounded"
-          onChange={handleChange}
-          required
-        />
+            <label className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              className="w-full input input-bordered focus:input-primary mb-[15px]"
+              placeholder="votre@email.com"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Mot de passe"
-          className="w-full mb-3 px-4 py-2 border rounded"
-          onChange={handleChange}
-          required
-        />
+            <label className="block text-sm font-medium text-gray-700">
+              Mot de passe
+            </label>
+            <input
+              type="password"
+              name="password"
+              className="w-full input input-bordered focus:input-primary mb-[15px]"
+              placeholder="********"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
 
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirmer le mot de passe"
-          className="w-full mb-4 px-4 py-2 border rounded"
-          onChange={handleChange}
-          required
-        />
+            <label className="block text-sm font-medium text-gray-700">
+              Confirmer le mot de passe
+            </label>
+            <input
+              type="password"
+              name="confirmPassword"
+              className={`w-full input input-bordered focus:input-primary mb-[15px] ${
+                errors.confirmPassword ? "input-error" : ""
+              }`}
+              placeholder="********"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.confirmPassword}
+              </p>
+            )}
 
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 w-full rounded"
-        >
-          S'inscrire
-        </button>
-      </form>
+            <button
+              type="submit"
+              className={`btn btn-primary mt-4 ml-[190px] ${
+                loading ? "loading" : ""
+              }`}
+              disabled={loading}
+            >
+              {loading ? "" : "S'inscrire"}
+            </button>
+          </form>
+        </div>
+
+        <br />
+
+        <div className="flex items-center justify-center ml-[10px] gap-[10px]">
+          <button
+            onClick={handleGoogleSignUp}
+            className="btn btn-outline hover:bg-gray-50 flex items-center justify-center gap-3"
+          >
+            <img
+              src="https://static.dezeen.com/uploads/2025/05/sq-google-g-logo-update_dezeen_2364_col_0-852x852.jpg"
+              alt="Google"
+              className="w-[25px] h-[25px] rounded-full"
+            />
+            S'inscrire avec Google
+          </button>
+
+          <button
+            onClick={handleFacebookSignUp}
+            className="btn btn-outline hover:bg-gray-50 flex items-center justify-center gap-3"
+          >
+            <img
+              src="https://img.freepik.com/photos-premium/logo-facebook_1080029-107.jpg?semt=ais_hybrid&w=740"
+              alt="Facebook"
+              className="w-[25px] h-[25px] rounded-full"
+            />
+            S'inscrire avec Facebook
+          </button>
+        </div>
+
+        <br />
+
+        <div className="text-center text-sm text-gray-500 mt-4">
+          Vous avez déjà un compte?{" "}
+          <a href="/login" className="text-primary hover:underline">
+            Connectez-vous
+          </a>
+        </div>
+      </div>
     </div>
   );
 };

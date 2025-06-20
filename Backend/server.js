@@ -14,9 +14,21 @@ const insightRoutes = require("./routes/insight.routes");
 dotenv.config();
 const app = express();
 
-app.use(cors());
+const corsOptions = {
+  origin: "http://localhost:5173", // autorise le frontend
+  credentials: true, // permet d'envoyer les cookies
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(
+  "/api/clerk-webhook",
+  bodyParser.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -25,6 +37,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/accounts", accountRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", insightRoutes);
+app.use("/api", require("./routes/clerkWebhook.routes"));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
