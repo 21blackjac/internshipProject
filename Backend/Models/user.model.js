@@ -78,6 +78,10 @@ const User = {
       callback(null, results[0].count);
     });
   },
+
+  query: (sql, params, callback) => {
+    db.query(sql, params, callback);
+  },
 };
 
 module.exports = User;

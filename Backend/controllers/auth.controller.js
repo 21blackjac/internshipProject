@@ -82,7 +82,7 @@ exports.forgotPassword = (req, res) => {
       (err) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        const resetLink = `${process.env.FRONT_URL}/reset-password/${token}`;
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
         const mailOptions = {
           from: process.env.EMAIL_USER,
           to: email,

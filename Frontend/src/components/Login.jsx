@@ -1,59 +1,42 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { toast } from "react-toastify";
-import { useSignUp } from "@clerk/clerk-react";
+import { useSignIn } from "@clerk/clerk-react";
+import { Link } from "react-router-dom";
 
-const Register = () => {
+const Login = () => {
   const navigate = useNavigate();
-  const { signUp } = useSignUp();
+  const { signIn } = useSignIn();
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
 
-  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (
-      formData.password &&
-      formData.confirmPassword &&
-      formData.password !== formData.confirmPassword
-    ) {
-      setErrors((prev) => ({
-        ...prev,
-        confirmPassword: "Les mots de passe ne correspondent pas",
-      }));
-    } else {
-      setErrors((prev) => ({ ...prev, confirmPassword: null }));
-    }
-  }, [formData.password, formData.confirmPassword]);
-
-  const handleGoogleSignUp = async () => {
+  const handleGoogleLogin = async () => {
     try {
-      await signUp.authenticateWithRedirect({
+      await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/dashboard",
       });
     } catch (err) {
-      console.error("❌ Google signup failed:", err);
-      toast.error("Échec avec Google");
+      console.error("❌ Échec Google login:", err);
+      toast.error("Connexion Google échouée.");
     }
   };
 
-  const handleFacebookSignUp = async () => {
+  const handleFacebookLogin = async () => {
     try {
-      await signUp.authenticateWithRedirect({
+      await signIn.authenticateWithRedirect({
         strategy: "oauth_facebook",
         redirectUrl: "/dashboard",
       });
     } catch (err) {
-      console.error("❌ Facebook sign-up failed:", err);
-      toast.error("Échec avec Facebook");
+      console.error("❌ Échec Facebook login:", err);
+      toast.error("Connexion Facebook échouée.");
     }
   };
 
@@ -63,19 +46,17 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (errors.confirmPassword) return;
-
     setLoading(true);
-    try {
-      const response = await api.post("/auth/register", formData);
-      console.log("✅ Register response:", response.data);
 
-      toast.success("Inscription réussie !");
-      navigate("/login");
+    try {
+      const response = await api.post("/auth/login", formData);
+      console.log("✅ Login successful:", response.data);
+
+      toast.success("Connexion réussie !");
+      navigate("/dashboard");
     } catch (error) {
-      console.error("❌ Register error:", error);
-      const errMsg = error.response?.data?.error || "Une erreur est survenue.";
+      console.error("❌ Login error:", error);
+      const errMsg = error.response?.data?.error || "Erreur de connexion.";
       toast.error(errMsg);
     } finally {
       setLoading(false);
@@ -165,32 +146,17 @@ const Register = () => {
           }
         }
       `}</style>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4 z-10">
         <div className=" max-w-md p-8 space-y-6 rounded-xl shadow-lg border-gray-100">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-800">
-              Créez votre compte
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-800">Connexion</h2>
             <p className="text-gray-500 mt-2">
-              Rejoignez notre communauté dès aujourd'hui
+              Bienvenue, connectez-vous à votre compte
             </p>
           </div>
 
           <div className="flex items-center justify-center space-x-2 mb-4">
             <form onSubmit={handleSubmit}>
-              <label className="block text-sm font-medium text-gray-700">
-                Nom complet
-              </label>
-              <input
-                type="text"
-                name="name"
-                className="w-[95%] input input-bordered focus:input-primary mb-[15px]"
-                placeholder="Ex: Mustapha Chaiq"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-
               <label className="block text-sm font-medium text-gray-700">
                 Email
               </label>
@@ -217,43 +183,28 @@ const Register = () => {
                 required
               />
 
-              <label className="block text-sm font-medium text-gray-700">
-                Confirmer le mot de passe
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                className={`w-[95%] input input-bordered focus:input-primary mb-[15px] ${
-                  errors.confirmPassword ? "input-error" : ""
-                }`}
-                placeholder="********"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-              />
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.confirmPassword}
-                </p>
-              )}
-
               <button
                 type="submit"
-                className={`btn btn-primary mt-4 ml-[205px] ${
+                className={`btn btn-primary mt-4 ml-[200px] ${
                   loading ? "loading" : ""
                 }`}
                 disabled={loading}
               >
-                {loading ? "" : "S'inscrire"}
+                {loading ? "" : "Se connecter"}
               </button>
             </form>
+          </div>
+          <div className="text-right text-sm">
+            <Link to="/forgot-password" className="text-accent hover:underline">
+              Mot de passe oublié ?
+            </Link>
           </div>
 
           <div className="divider">OU</div>
 
-          <div className="flex items-center justify-center ml-[20px] gap-[10px]">
+          <div className="flex items-center justify-center ml-[10px] gap-[10px]">
             <button
-              onClick={handleGoogleSignUp}
+              onClick={handleGoogleLogin}
               className="btn btn-outline hover:bg-gray-50 flex items-center justify-center gap-3"
             >
               <img
@@ -261,11 +212,11 @@ const Register = () => {
                 alt="Google"
                 className="w-[25px] h-[25px] rounded-full"
               />
-              S'inscrire avec Google
+              Se connecter avec Google
             </button>
 
             <button
-              onClick={handleFacebookSignUp}
+              onClick={handleFacebookLogin}
               className="btn btn-outline hover:bg-gray-50 flex items-center justify-center gap-3"
             >
               <img
@@ -273,16 +224,14 @@ const Register = () => {
                 alt="Facebook"
                 className="w-[25px] h-[25px] rounded-full"
               />
-              S'inscrire avec Facebook
+              Se connecter avec Facebook
             </button>
           </div>
 
-          <br />
-
           <div className="text-center text-sm text-gray-500 mt-4">
-            Vous avez déjà un compte?{" "}
-            <a href="/login" className="text-primary hover:underline">
-              Connectez-vous
+            Vous n'avez pas de compte ?{" "}
+            <a href="/register" className="text-primary hover:underline">
+              Inscrivez-vous
             </a>
           </div>
         </div>
@@ -291,4 +240,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Login;
