@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { toast } from "react-toastify";
-import { useSignIn } from "@clerk/clerk-react";
+import { useSignIn, useUser } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
   const { signIn } = useSignIn();
+  const { isSignedIn } = useUser();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -16,12 +17,24 @@ const Login = () => {
 
   const [loading, setLoading] = useState(false);
 
+  // useEffect(() => {
+  //   if (isSignedIn) {
+  //     navigate("/dashboard");
+  //   }
+  // }, [isSignedIn, navigate]);
+
   const handleGoogleLogin = async () => {
     try {
-      await signIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/dashboard",
-      });
+      if (isSignedIn) {
+        localStorage.setItem("token", signIn.session?.token);
+        navigate("/dashboard");
+      }
+      else {
+        await signIn.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/dashboard",
+        });
+      }
     } catch (err) {
       console.error("❌ Échec Google login:", err);
       toast.error("Connexion Google échouée.");
@@ -49,11 +62,28 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await api.post("/auth/login", formData);
+      const response = await api.post("/auth/login", formData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.data || !response.data.token) {
+        throw new Error("Aucune donnée de connexion reçue.");
+      }
       console.log("✅ Login successful:", response.data);
 
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      api.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
+      setFormData({ email: "", password: "" });
+      setLoading(false);
+
+      if (response.data.user.role === "admin") {
+        navigate("/admin/");
+      } else {
+        navigate("/dashboard");
+      }
       toast.success("Connexion réussie !");
-      navigate("/dashboard");
     } catch (error) {
       console.error("❌ Login error:", error);
       const errMsg = error.response?.data?.error || "Erreur de connexion.";
@@ -106,7 +136,7 @@ const Login = () => {
           animation: "aurora-pulse 8s infinite alternate",
         }}
       />
-      <style jsx>{`
+      <style>{`
         @keyframes aurora-drift {
           0% {
             background-position: 0% 0%, 0% 0%, 0% 0%;

@@ -40,6 +40,20 @@ exports.getUserById = (req, res) => {
   });
 };
 
+exports.createUser = (req, res) => {
+  const { name, email, password } = req.body;
+  const bcrypt = require("bcrypt");
+  bcrypt.hash(password, 10, (err, hash) => {
+    if (err) return res.status(500).json({ error: err.message });
+    User.create({ name, email, password: hash }, (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res
+        .status(201)
+        .json({ message: "Utilisateur créé", id: result.insertId });
+    });
+  });
+};
+
 exports.updateUser = (req, res) => {
   const { name, email, password } = req.body;
   const updateFields = { name, email };
@@ -108,14 +122,14 @@ exports.createAccount = (req, res) => {
 
 exports.updateAccount = (req, res) => {
   const { name, balance, type } = req.body;
-  Account.update(req.params.id, { name, balance, type }, (err) => {
+  Account.updateForAdmin(req.params.id, { name, balance, type }, (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Account updated successfully" });
   });
 };
 
 exports.deleteAccount = (req, res) => {
-  Account.delete(req.params.id, (err) => {
+  Account.deleteForAdmin(req.params.id, (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Account deleted successfully" });
   });
@@ -222,7 +236,7 @@ exports.getCategoriesByUserId = (req, res) => {
 exports.createCategory = (req, res) => {
   const { name, user_defined } = req.body;
   Category.create(
-    { name, user_id: req.user.id, user_defined },
+    { name, user_defined, user_id: req.user.id },
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res
@@ -234,14 +248,14 @@ exports.createCategory = (req, res) => {
 
 exports.updateCategory = (req, res) => {
   const { name, user_defined } = req.body;
-  Category.update(req.params.id, { name, user_defined }, (err) => {
+  Category.updateForAdmin(req.params.id, { name, user_defined }, (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Category updated" });
   });
 };
 
 exports.deleteCategory = (req, res) => {
-  Category.delete(req.params.id, (err) => {
+  Category.deleteForAdmin(req.params.id, (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Category deleted" });
   });

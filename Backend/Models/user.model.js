@@ -14,6 +14,7 @@ const User = {
   },
 
   createFromClerk: (userData, callback) => {
+    console.log("📦 Création d'un nouvel utilisateur Clerk:", userData);
     const sql =
       "INSERT INTO users (name, email, password, role, clerk_id) VALUES (?, ?, ?, ?, ?)";
     const params = [
@@ -37,6 +38,7 @@ const User = {
   },
 
   getByClerkId: (clerkId, callback) => {
+    console.log("🔍 Recherche dans la base Clerk ID:", clerkId);
     const sql = "SELECT * FROM users WHERE clerk_id = ?";
     db.query(sql, [clerkId], callback);
   },
@@ -65,6 +67,11 @@ const User = {
   getAll: (callback) => {
     const sql = "SELECT * FROM users";
     db.query(sql, callback);
+  },
+
+  findByEmail: (email, callback) => {
+    const sql = "SELECT * FROM users WHERE email = ?";
+    db.query(sql, [email], callback);
   },
 
   delete: (id, callback) => {

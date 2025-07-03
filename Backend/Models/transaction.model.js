@@ -51,15 +51,15 @@ const Transaction = {
     db.query(sql, [userId, type], callback);
   },
 
-  update: (id, transaction, callback) => {
+  update: (id, transaction, userId, callback) => {
     const sql = `UPDATE transactions 
                  SET account_id=?, category_id=?, type=?, amount=?, date=?, description=?
-                 WHERE id = ?`;
+                 WHERE id = ? AND user_id = ?`;
     const { account_id, category_id, type, amount, date, description } =
       transaction;
     db.query(
       sql,
-      [account_id, category_id, type, amount, date, description, id],
+      [account_id, category_id, type, amount, date, description, id, userId],
       callback
     );
   },

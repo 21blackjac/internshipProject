@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require("../controllers/user.controller");
 const { verifyToken } = require("../middlewares/auth.middleware");
 
+router.get("/dashboard", verifyToken, userController.getMyDashboardData);
 router.get("/profile", verifyToken, userController.getMyProfile);
 router.put("/profile", verifyToken, userController.updateMyProfile);
 router.delete("/profile", verifyToken, userController.deleteMyProfile);

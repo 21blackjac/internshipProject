@@ -3,6 +3,41 @@ const User = require("../Models/user.model");
 const Account = require("../Models/account.model");
 const Category = require("../Models/category.model");
 const Transaction = require("../Models/transaction.model");
+const db = require("../config/db");
+
+exports.getMyDashboardData = (req, res) => {
+  const userId = req.user.id;
+
+  const queries = {
+    income: "SELECT SUM(amount) AS total FROM transactions WHERE user_id = ? AND type = 'income'",
+    expense: "SELECT SUM(amount) AS total FROM transactions WHERE user_id = ? AND type = 'expense'",
+    balance: `
+      SELECT 
+        IFNULL(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) - 
+        IFNULL(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS total 
+      FROM transactions WHERE user_id = ?`,
+  };
+
+  const results = {};
+  let completed = 0;
+  const total = Object.keys(queries).length;
+
+  for (const [key, query] of Object.entries(queries)) {
+    db.query(query, [userId], (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      results[key] = parseFloat(rows[0].total) || 0;
+      completed++;
+      if (completed === total) {
+        return res.json({
+          totalIncome: results.income,
+          totalExpense: results.expense,
+          totalBalance: results.balance,
+        });
+      }
+    });
+  }
+};
+
 
 exports.getMyProfile = (req, res) => {
   const userId = req.user.id;
@@ -227,7 +262,7 @@ exports.updateMyTransaction = (req, res) => {
 };
 
 exports.deleteMyTransactionById = (req, res) => {
-  Transaction.delete(req.params.id, req.user.id, (err) => {
+  Transaction.delete(req.params.id, (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Transaction supprimée" });
   });

@@ -31,4 +31,12 @@ export default defineConfig({
     },
     tailwindcss(),
   ],
+  resolve: {
+    alias: {
+      "@": "/src",
+      "@components": "/src/components",
+      "@pages": "/src/pages",
+      "@utils": "/src/utils",
+    },
+  },
 });

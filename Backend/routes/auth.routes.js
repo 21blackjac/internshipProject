@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/auth.controller");
+const User = require("../Models/user.model");
 const { verifyToken } = require("../middlewares/auth.middleware");
 const { verifyToken: verifyClerkToken } = require("@clerk/backend");
-const { getUser } = require("@clerk/clerk-sdk-node"); // 👈 Vérifie que ce package est bien installé
+const { clerkClient } = require("@clerk/clerk-sdk-node");
 
 // Auth classique
 router.post("/register", authController.register);
@@ -18,6 +19,7 @@ router.post("/reset-password/:token", authController.resetPassword);
 // ✔️ Route 1 : Vérifier un token Clerk (Postman)
 router.get("/verify", async (req, res) => {
   const authHeader = req.headers.authorization;
+  console.log("Authorization Header:", authHeader);
 
   if (!authHeader?.startsWith("Bearer ")) {
     return res
@@ -59,9 +61,10 @@ router.get("/clerk-user", async (req, res) => {
     });
 
     const userId = session.sub;
-    const user = await getUser(userId); // depuis @clerk/clerk-sdk-node
-
+    const user = await clerkClient.users.getUser(userId);
+    
     return res.json({ user });
+    
   } catch (error) {
     return res.status(401).json({
       error: "Erreur lors de la récupération",

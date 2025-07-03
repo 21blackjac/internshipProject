@@ -125,7 +125,7 @@ const Register = () => {
           animation: "aurora-pulse 8s infinite alternate",
         }}
       />
-      <style jsx>{`
+      <style>{`
         @keyframes aurora-drift {
           0% {
             background-position: 0% 0%, 0% 0%, 0% 0%;

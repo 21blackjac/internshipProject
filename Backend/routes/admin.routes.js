@@ -3,11 +3,12 @@ const router = express.Router();
 const adminController = require("../controllers/admin.controller");
 const { verifyToken, isAdmin } = require("../middlewares/auth.middleware");
 
-router.get("/dashboard", verifyToken, isAdmin, adminController.getDashboardData);
+router.get("/adminDashboard", verifyToken, isAdmin, adminController.getDashboardData);
 
 // --- Users ---
 router.get("/users", verifyToken, isAdmin, adminController.getAllUsers);
 router.get("/users/:id", verifyToken, isAdmin, adminController.getUserById);
+router.post("/users", verifyToken, isAdmin, adminController.createUser);
 router.put("/users/:id", verifyToken, isAdmin, adminController.updateUser);
 router.delete("/users/:id", verifyToken, isAdmin, adminController.deleteUser);
 

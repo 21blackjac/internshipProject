@@ -2,8 +2,6 @@ const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
 
-const CLERK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
-
 function isValidClerkRequest(req) {
   // ✅ Skip signature validation in development (for local Postman or curl testing)
   if (process.env.NODE_ENV === "development") {

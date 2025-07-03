@@ -45,10 +45,23 @@ const Account = {
     db.query(sql, values, callback);
   },
 
+  updateForAdmin: (id, account, callback) => {
+    const sql =
+      "UPDATE accounts SET name = ?, balance = ?, type = ? WHERE id = ?";
+    const values = [account.name, account.balance, account.type, id];
+    db.query(sql, values, callback);
+  },
+
   delete: (id, user_id, callback) => {
     const sql = "DELETE FROM accounts WHERE id = ? AND user_id = ?";
     db.query(sql, [id, user_id], callback);
   },
+
+  deleteForAdmin: (id, callback) => {
+    const sql = "DELETE FROM accounts WHERE id = ?";
+    db.query(sql, [id], callback);
+  },
+
   totalBalance: (callback) => {
     const sql = "SELECT SUM(balance) AS total FROM accounts";
     db.query(sql, (err, results) => {
