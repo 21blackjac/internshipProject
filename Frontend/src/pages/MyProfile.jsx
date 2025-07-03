@@ -5,15 +5,27 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
+import { useAuth } from "@clerk/clerk-react";
 
 const MyProfile = () => {
   const { signOut } = useClerk();
   const navigate = useNavigate();
   const [profile, setProfile] = useState({ name: "", email: "", password: "" });
 
+  const { getToken } = useAuth();
+
   const fetchProfile = async () => {
     try {
-      const res = await api.get("/users/profile");
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
+      const res = await api.get("/users/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setProfile({ ...res.data, password: "" });
     } catch (err) {
       console.error("Erreur lors du chargement du profil :", err);
@@ -27,7 +39,16 @@ const MyProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.put("/users/profile", profile);
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
+      await api.put("/users/profile", profile, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       toast.success("Profil mis à jour !");
     } catch (err) {
       console.error("Erreur lors de la mise à jour :", err);
@@ -38,7 +59,16 @@ const MyProfile = () => {
   const handleDelete = async () => {
     if (confirm("Voulez-vous vraiment supprimer votre compte ?")) {
       try {
-        await api.delete("/users/profile");
+        let token = localStorage.getItem("token");
+
+        if (!token) {
+          token = await getToken({ template: "session" });
+        }
+        await api.delete("/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         toast("Compte supprimé.");
         await signOut(); // Déconnexion Clerk
       } catch (err) {

@@ -62,7 +62,7 @@ const App = () => {
 
         {/* Protected Pages with MainLayout */}
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<Navigate to="/dashboard" />} />
+          <Route index element={<Navigate to="/login" />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="accounts" element={<Accounts />} />
           <Route path="categories" element={<Categories />} />

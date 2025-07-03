@@ -20,6 +20,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { exportToExcel, exportToPDF } from "@/utils/exportUtils";
+import { useAuth } from "@clerk/clerk-react";
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -37,12 +38,18 @@ const Transactions = () => {
   const [showForm, setShowForm] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const { getToken } = useAuth();
 
   const fetchTransactions = async () => {
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       const res = await api.get("/users/transactions", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       setTransactions(res.data);
@@ -53,15 +60,20 @@ const Transactions = () => {
 
   const fetchAccountsAndCategories = async () => {
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       const [accRes, catRes] = await Promise.all([
         api.get("/users/accounts", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         }),
         api.get("/users/categories", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         }),
       ]);
@@ -75,16 +87,21 @@ const Transactions = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       if (form.id) {
         await api.put(`/users/transactions/${form.id}`, form, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         });
       } else {
         await api.post("/users/transactions", form, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         });
       }
@@ -105,9 +122,14 @@ const Transactions = () => {
   const handleDelete = async (id) => {
     if (!confirm("Supprimer cette transaction ?")) return;
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       await api.delete(`/users/transactions/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       fetchTransactions();

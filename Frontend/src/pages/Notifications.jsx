@@ -1,15 +1,26 @@
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import api from "@/api/api";
+import { useAuth } from "@clerk/clerk-react";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
+  const { getToken } = useAuth();
 
   useEffect(() => {
     // Exemple : détecter les transactions > 1000
     const fetchNotifications = async () => {
       try {
-        const res = await api.get("/users/transactions");
+        let token = localStorage.getItem("token");
+
+        if (!token) {
+          token = await getToken({ template: "session" });
+        }
+        const res = await api.get("/users/transactions", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const alerts = res.data
           .filter((t) => t.amount > 1000)
           .map((t) => ({

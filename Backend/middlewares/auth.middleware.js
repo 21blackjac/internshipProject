@@ -14,53 +14,50 @@ exports.verifyToken = async (req, res, next) => {
   console.log("🔎 Longueur du token:", token.length);
   console.log("🔎 Début du token:", token.slice(0, 30));
 
-  // 🧪 1. Si c'est un token Clerk (sess_...)
-  if (token.startsWith("sess_")) {
-    try {
-      const session = await clerkClient.sessions.verifySession(token);
+  // ✅ 1. Vérification via Clerk (JWT issu de getToken)
+  try {
+    const session = await clerkClient.verifyToken(token);
+    console.log("✅ Token Clerk JWT vérifié:", session);
 
-      if (session && session.userId) {
-        const clerkId = session.userId;
+    const clerkId = session.sub;
 
-        User.getByClerkId(clerkId, (err, users) => {
-          if (err) return res.status(500).json({ error: err.message });
+    // Vérifier si l'utilisateur Clerk existe déjà dans MySQL
+    User.getByClerkId(clerkId, (err, users) => {
+      if (err) return res.status(500).json({ error: err.message });
 
-          if (users.length) {
-            // ✅ Utilisateur Clerk déjà dans MySQL
-            req.user = { id: users[0].id, role: users[0].role };
-            return next();
-          } else {
-            // 🔄 Synchronisation avec MySQL
-            clerkClient.users
-              .getUser(clerkId)
-              .then((clerkUser) => {
-                const newUser = {
-                  name: `${clerkUser.firstName} ${clerkUser.lastName}`.trim(),
-                  email: clerkUser.emailAddresses?.[0]?.emailAddress,
-                  password: "",
-                  role: "user",
-                  clerk_id: clerkId,
-                };
+      if (users.length) {
+        req.user = { id: users[0].id, role: users[0].role };
+        return next();
+      } else {
+        // 🔄 Synchronisation utilisateur Clerk → MySQL
+        clerkClient.users
+          .getUser(clerkId)
+          .then((clerkUser) => {
+            const newUser = {
+              name: `${clerkUser.firstName} ${clerkUser.lastName}`.trim(),
+              email: clerkUser.emailAddresses?.[0]?.emailAddress,
+              password: "",
+              role: "user",
+              clerk_id: clerkId,
+            };
 
-                User.createFromClerk(newUser, (err, result) => {
-                  if (err) return res.status(500).json({ error: err.message });
-                  req.user = { id: result.insertId, role: "user" };
-                  return next();
-                });
-              })
-              .catch((error) =>
-                res
-                  .status(500)
-                  .json({ error: "Erreur Clerk", details: error.message })
-              );
-          }
-        });
-
-        return;
+            User.createFromClerk(newUser, (err, result) => {
+              if (err) return res.status(500).json({ error: err.message });
+              req.user = { id: result.insertId, role: "user" };
+              return next();
+            });
+          })
+          .catch((error) =>
+            res
+              .status(500)
+              .json({ error: "Erreur lors de la récupération Clerk", details: error.message })
+          );
       }
-    } catch (err) {
-      console.error("❌ Erreur vérification Clerk:", err.message);
-    }
+    });
+
+    return; // ⛔ ne pas continuer
+  } catch (err) {
+    console.warn("⚠️ Ce n'est pas un token Clerk ou il est invalide:", err.message);
   }
 
   // 🎫 2. Sinon, JWT local

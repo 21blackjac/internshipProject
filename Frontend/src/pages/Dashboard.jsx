@@ -12,6 +12,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { useAuth } from "@clerk/clerk-react";
 
 const COLORS = ["#10B981", "#EF4444"]; // Green for income, Red for expense
 
@@ -23,14 +24,22 @@ const Dashboard = () => {
     totalExpense: 0,
     totalBalance: 0,
   });
-  
+
+  const { getToken } = useAuth();
+
   console.log("✅ Dashboard component loaded");
 
   const fetchInsights = async () => {
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
+
       const res = await api.get("/users/dashboard", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -97,7 +106,9 @@ const Dashboard = () => {
         <div className="flex justify-center items-center bg-base-200 p-4 rounded-xl shadow">
           <div className="bg-blue-100 text-blue-900 p-4 rounded-xl shadow">
             <h2 className="text-lg font-semibold">💰 Solde</h2>
-            <p className="text-2xl ml-[10px]">{insights.totalBalance.toFixed(2)} MAD</p>
+            <p className="text-2xl ml-[10px]">
+              {insights.totalBalance.toFixed(2)} MAD
+            </p>
           </div>
         </div>
         <div className="flex justify-around items-center bg-base-200 p-4 rounded-xl shadow mt-[50px]">

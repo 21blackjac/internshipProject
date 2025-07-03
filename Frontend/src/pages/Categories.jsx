@@ -1,17 +1,24 @@
 import { useEffect, useState } from "react";
 import api from "@/api/api";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@clerk/clerk-react";
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const { getToken } = useAuth();
 
   const fetchCategories = async () => {
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       const res = await api.get("/users/categories", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       setCategories(res.data);
@@ -23,13 +30,30 @@ const Categories = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       if (editingId) {
-        const res = await api.put(`/users/categories/${editingId}`, {
-          name,
-        });
+        const res = await api.put(
+          `/users/categories/${editingId}`,
+          {
+            name,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         console.log("Catégorie mise à jour :", res.data);
       } else {
-        const res = await api.post("/users/categories", { name });
+        const res = await api.post("/users/categories", { name }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         console.log("Catégorie ajoutée :", res.data);
       }
       setName("");
@@ -42,9 +66,14 @@ const Categories = () => {
 
   const handleDelete = async (id) => {
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       const res = await api.delete(`/users/categories/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       console.log("Catégorie supprimée :", res.data);

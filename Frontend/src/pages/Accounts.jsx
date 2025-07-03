@@ -1,18 +1,25 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 import { Trash2, Pencil } from "lucide-react";
+import { useAuth } from "@clerk/clerk-react";
 
 const Accounts = () => {
   const [accounts, setAccounts] = useState([]);
   const [form, setForm] = useState({ name: "", type: "", balance: "" });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { getToken } = useAuth();
 
   const fetchAccounts = async () => {
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       const res = await api.get("/users/accounts", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       setAccounts(res.data);
@@ -27,10 +34,15 @@ const Accounts = () => {
     const url = editingId ? `/users/accounts/${editingId}` : "/users/accounts";
 
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       setLoading(true);
       await api[method](url, form, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       await fetchAccounts();
@@ -51,9 +63,14 @@ const Accounts = () => {
   const handleDelete = async (id) => {
     if (!confirm("Supprimer ce compte ?")) return;
     try {
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        token = await getToken({ template: "session" });
+      }
       await api.delete(`/users/accounts/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       fetchAccounts();
