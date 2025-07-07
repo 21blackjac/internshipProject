@@ -49,11 +49,15 @@ const Categories = () => {
         );
         console.log("Catégorie mise à jour :", res.data);
       } else {
-        const res = await api.post("/users/categories", { name }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await api.post(
+          "/users/categories",
+          { name },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         console.log("Catégorie ajoutée :", res.data);
       }
       setName("");
